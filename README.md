@@ -6,7 +6,7 @@ This project demonstrates a full-stack engineering approach, combining bare-meta
 
 ---
 
-## 🏛️ Technical Architecture
+## Technical Architecture
 
 This system allows for sub-microsecond timing precision and gapless data acquisition, overcoming the traditional limitations of standard microcontrollers.
 
@@ -30,7 +30,7 @@ The RP2040's unique PIO subsystem is used to implement a custom assembly state m
 
 ---
 
-## 📊 Data Analysis Features
+## Data Analysis Features
 
 The software provides real-time signal processing to extract physical properties from the raw NMR data.
 
@@ -46,7 +46,7 @@ To determine the exact Larmor frequency of the sample (typically ~2 kHz in Earth
 
 ---
 
-## 📸 System Gallery
+## System Gallery
 
 ### 1. Free Induction Decay (FID)
 *Raw signal from the probe showing the decaying Larmor precession.*
