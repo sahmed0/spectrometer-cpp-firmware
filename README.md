@@ -1,52 +1,78 @@
-# NMR Spectrometer Controller (C++ & Python)
+# C++ based NMR Spectrometer Control Firmware
 
-A high-precision, low-cost controller for Earth's Field Nuclear Magnetic Resonance (EFNMR) spectroscopy, built on the **Raspberry Pi Pico (RP2040)**.
-
-This project demonstrates a full-stack engineering approach, combining bare-metal firmware, custom hardware interfaces (PIO/DMA), and a modern desktop application for scientific data analysis.
+A high-precision controller for my Earth's Field Nuclear Magnetic Resonance (EFNMR) spectroscopy Master's Research Project, built on the Raspberry Pi Pico (RP2040). This project integrates bare-metal C++ firmware with a modern Python desktop application for scientific data analysis.
 
 ![Copyright](https://img.shields.io/badge/Copyright-2026_Sajid_Ahmed-limegreen.svg)
 ![Firmware](https://img.shields.io/badge/Firmware-C++-blue.svg)
-![Desktop GUI](https://img.shields.io/badge/Desktop_GUI-Python-yellow.svg)
+![GUI](https://img.shields.io/badge/GUI-Python-yellow.svg)
+
+---
+
+## Contents
+
+- [Features](#features)
+- [Technical Architecture](#technical-architecture)
+- [Tech Stack](#tech-stack)
+- [Key Engineering Decisions](#key-engineering-decisions)
+- [System Gallery](#system-gallery)
+- [Installation & Usage](#installation--usage)
+- [License](#license)
+
+---
+
+## Features
+
+- **Cycle-Accurate Pulse Generation**: Sub-microsecond timing for B1 field pulses using the RP2040 PIO subsystem.
+- **Gapless Data Acquisition**: High-speed ADC streaming (up to 500 kS/s) via DMA with zero CPU overhead.
+- **Real-Time Signal Processing**:
+    - **T2 Relaxation Fit**: Automated mono-exponential fitting for CPMG echo trains.
+    - **FFT Spectrum**: Frequency domain analysis with Hanning windowing and peak detection.
+- **Modern Desktop UI**: Responsive dark-mode interface with multithreaded Serial communication.
 
 ---
 
 ## Technical Architecture
 
-This system allows for sub-microsecond timing precision and gapless data acquisition, overcoming the traditional limitations of standard microcontrollers.
+The system employs a command-response architecture over Serial, offloading timing-critical tasks to dedicated hardware peripherals.
 
-### 1. PIO (Programmable I/O) Pulse Generation
-The RP2040's unique PIO subsystem is used to implement a custom assembly state machine (`pio_pulses.pio`). 
--   **Cycle-Accurate Timing**: Generates RF pulses (B1 field) with 125MHz clock precision, completely independent of CPU jitter or interrupts.
--   **Complex Sequences**: Capable of executing multi-pulse sequences like **CPMG** (Carr-Purcell-Meiboom-Gill) for T2 relaxation measurement, handling microsecond-level spacing between thousands of echoes.
+```mermaid
+graph TD
+    User["User (GUI)"] -- "Serial Commands" --> Firmware["RP2040 Firmware (C++)"]
+    Firmware -- "Timing Config" --> PIO["PIO State Machine"]
+    PIO -- "Logic Level" --> Coils["Probe Hardware"]
+    Coils -- "Analog In" --> ADC["ADC"]
+    ADC -- "DMA Stream" --> RAM["RAM Ring Buffer"]
+    RAM -- "CSV Dump" --> GUI["Python Analysis Engine"]
+    GUI -- "Matplotlib" --> Display["Desktop UI"]
+```
 
-### 2. DMA (Direct Memory Access) Acquisition
--   **Gapless Streaming**: Uses DMA channels to stream ADC data directly into a ring buffer in RAM.
--   **Zero CPU Overhead**: The CPU is free to process logic or communicate with the PC while data is being captured at full samplerate (up to 500 kS/s).
+### 1. PIO Pulse Engine
+The `pio_pulses.pio` assembly handles the precise timing of the CPMG sequence. By using the PIO's independent state machines, the pulses remain jitter-free regardless of main CPU interrupts or serial I/O.
 
-### 3. Firmware (C++)
--   **Bare-Metal Performance**: Written in C++ using the Pico SDK (Arduino Core) for maximum efficiency.
--   **State Machine**: Manages the spectrometer states (Idle, Tuning, Pulse, Acquire) and handles high-speed Serial communication with the host.
-
-### 4. Desktop GUI (Python)
--   **Modern Interface**: Built with `CustomTkinter` for a professional, dark-themed user experience.
--   **Multithreading**: Handles Serial I/O in background threads to ensure the UI remains responsive during long experiments.
--   **Real-Time Visualization**: Uses `Matplotlib` to render high-frequency ADC data and analysis results instantly.
+### 2. DMA ADC Transfer
+To capture the rapidly decaying NMR signal without gaps, DMA channels transfer samples directly from the ADC FIFO to a memory buffer. This allows for continuous sampling at high rates while the CPU remains free to manage state transitions.
 
 ---
 
-## Data Analysis Features
+## Tech Stack
 
-The software provides real-time signal processing to extract physical properties from the raw NMR data.
+| Component | Technology | Role |
+| :--- | :--- | :--- |
+| **Firmware** | C++17 / Pico SDK | Hardware control and sequence management |
+| **Logic** | PIO Assembly | Deterministic pulse timing |
+| **Desktop UI** | Python / CustomTkinter | Modern experimental interface |
+| **Analysis** | NumPy / SciPy | Exponential fitting and signal processing |
+| **Visuals** | Matplotlib | Real-time waveform rendering |
 
-### T2 Relaxation Analysis (CPMG)
-For spin-echo trains, the software performs automated peak detection and curve fitting.
--   **Algorithm**: Extracts the peak amplitude of each echo in the train.
--   **Fitting**: Fits a mono-exponential decay $$V(t) = A \cdot e^{-t/T_2}$$ to determine the Transverse Relaxation Time ($$T_2$$), a key indicator of molecular environment (e.g., distinguishing oil vs water).
+---
 
-### Fast Fourier Transform (FFT)
-To determine the exact Larmor frequency of the sample (typically ~2 kHz in Earth's field):
--   **Preprocessing**: Applies DC offset removal, basic denoising, and Hanning windowing to the FID signal.
--   **Spectrum**: Computes the FFT to display the frequency domain, with automatic peak detection to label the Larmor frequency.
+## Key Engineering Decisions
+
+| Decision | Logic |
+| :--- | :--- |
+| **PIO vs Bit-Banging** | Bit-banging introduced micro-jitter during CPMG sequences, reducing spin-echo precision. PIO provides cycle-accurate timing at 125MHz. |
+| **CustomTkinter** | Chosen over standard Tkinter or PyQt to provide a modern, "premium" aesthetic while maintaining a lightweight footprint. |
+| **DMA Integration** | Essential for gapless acquisition. Overcame challenges in low-level register configuration to ensure zero-loss data streaming. |
 
 ---
 
@@ -56,12 +82,12 @@ To determine the exact Larmor frequency of the sample (typically ~2 kHz in Earth
 *Raw signal from the probe showing the decaying Larmor precession.*
 ![Free Induction Decay](images/FID.png)
 
-### 2. Larmor Frequency
-*Fast Fourier Transform (FFT) of the FID, showing the Larmor frequency.*
+### 2. Larmor Frequency Analysis
+*FFT of the FID signal, accurately identifying the Larmor frequency near 2.2 kHz.*
 ![Free Induction Decay FFT](images/FID-FFT.png)
 
-### 3. CPMG Pulse Sequence
-*A train of spin echoes generated by the PIO engine, used for T2 measurement.*
+### 3. CPMG Echo Train
+*A train of spin echoes maintained by the PIO engine for T2 measurement.*
 ![CPMG Echo Train](images/CPMG.png)
 
 ### 3. T2 Relaxation Fit
@@ -74,7 +100,39 @@ To determine the exact Larmor frequency of the sample (typically ~2 kHz in Earth
 
 ---
 
-## Licensing & Usage
+## Installation & Usage
+
+### Prerequisites
+- [Arduino IDE](https://www.arduino.cc/en/software)
+- Python 3.9+
+- [Raspberry Pi Pico (RP2040)](https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html)
+
+### Hardware Setup
+1. Connect the spectrometer probe to **GP28 (ADC2)**.
+2. Connect the pulse trigger to **GP16**.
+3. (Optional) Connect the pre-polarisation coil control to **GP26**.
+
+### Firmware Deployment
+1. Open `main.ino` in the Arduino IDE.
+2. Select **Raspberry Pi Pico** (or RP2040 Board).
+3. Connect the Pico and click **Upload**.
+
+### Desktop App Setup
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/nmr-controller.git
+cd nmr-controller
+
+# Install dependencies
+pip install customtkinter pyserial numpy scipy matplotlib
+
+# Run the application
+python gui/gui.py
+```
+
+---
+
+## License
 
 Copyright (c) 2026 Sajid Ahmed. **All Rights Reserved.**
 
