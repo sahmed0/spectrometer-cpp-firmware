@@ -37,13 +37,29 @@ The system employs a command-response architecture over Serial, offloading timin
 
 ```mermaid
 graph TD
-    User["User (GUI)"] -- "Serial Commands" --> Firmware["RP2040 Firmware (C++)"]
-    Firmware -- "Timing Config" --> PIO["PIO State Machine"]
-    PIO -- "Logic Level" --> Coils["Probe Hardware"]
-    Coils -- "Analog In" --> ADC["ADC"]
-    ADC -- "DMA Stream" --> RAM["RAM Ring Buffer"]
-    RAM -- "CSV Dump" --> GUI["Python Analysis Engine"]
-    GUI -- "Matplotlib" --> Display["Desktop UI"]
+    subgraph PC ["PC (Python GUI)"]
+        GUI[gui.py] -->|Commands: FID/CPMG| Serial[Serial Communication]
+        Serial -->|Raw ADC Data| GUI
+        GUI -->|Signal Processing| FFT[FFT Analysis]
+        GUI -->|Signal Processing| T2[T2 Relaxation Fitting]
+        GUI -->|Visualization| Plots[Matplotlib/CustomTkinter]
+    end
+
+    subgraph Pico ["Raspberry Pi Pico (C++ on Arduino IDE)"]
+        Serial <-->|USB Serial| PicoSerial[main.ino: Serial.read()]
+        PicoSerial -->|Parameters| Sequencer[pio_pulses.pio: PIO State Machine]
+        Sequencer -->|Timing| TX[Pulse Pin: GP16]
+        Sequencer -->|Logic| Switch[Isolation Switch: GP22]
+        PicoSerial -->|Trigger| Coil[Polarisation Relay: GP26]
+        PicoSerial -->|DMA Config| ADC_HW[ADC DMA Pipeline]
+        ADC_HW -->|DMA Stream| RAM[RAM Ring Buffer]
+        RAM -->|Serialized CSV| PicoSerial
+        
+        TX -.->|RF Pulse| Hardware[NMR Hardware]
+        Coil -.->|Polarise| Hardware
+        Hardware -.->|Signal| ADC_In[ADC Input: GP28]
+        ADC_In --> ADC_HW
+    end
 ```
 
 ### 1. PIO Pulse Engine
