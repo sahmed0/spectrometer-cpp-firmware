@@ -46,7 +46,7 @@ graph TD
     end
 
     subgraph Pico ["Raspberry Pi Pico (C++ on Arduino IDE)"]
-        Serial <-->|USB Serial| PicoSerial[main.ino: Serial.read()]
+        Serial <-->|USB Serial| PicoSerial[main.ino]
         PicoSerial -->|Parameters| Sequencer[pio_pulses.pio: PIO State Machine]
         Sequencer -->|Timing| TX[Pulse Pin: GP16]
         Sequencer -->|Logic| Switch[Isolation Switch: GP22]
