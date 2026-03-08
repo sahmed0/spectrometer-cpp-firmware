@@ -45,8 +45,8 @@ graph TD
         GUI -->|Visualization| Plots[Matplotlib/CustomTkinter]
     end
 
-    subgraph Pico ["Raspberry Pi Pico (C++ on Arduino IDE)"]
-        Serial <-->|USB Serial| PicoSerial[main.ino]
+    subgraph Pico ["RP2040 (C++ firmware)"]
+        Serial <-->|USB Serial| PicoSerial[main.ino via Arduino IDE]
         PicoSerial -->|Parameters| Sequencer[pio_pulses.pio: PIO State Machine]
         Sequencer -->|Timing| TX[Pulse Pin: GP16]
         Sequencer -->|Logic| Switch[Isolation Switch: GP22]
@@ -88,7 +88,11 @@ To capture the rapidly decaying NMR signal without gaps, DMA channels transfer s
 | :--- | :--- |
 | **PIO vs Bit-Banging** | Bit-banging introduced micro-jitter during CPMG sequences, reducing spin-echo precision. PIO provides cycle-accurate timing at 125MHz. |
 | **CustomTkinter** | Chosen over standard Tkinter or PyQt to provide a modern, "premium" aesthetic while maintaining a lightweight footprint. |
-| **DMA Integration** | Essential for gapless acquisition. Overcame challenges in low-level register configuration to ensure zero-loss data streaming. |
+| **DMA Integration** | Essential for gapless acquisition to ensure zero-loss data streaming. |
+
+## Challenges and Lessons Learned
+- **Hardware-level Logic**: The implementation of hardware-level logic (PIO and DMA) was the most significant technical hurdle. Configuring DMA registers and writing the `pio_pulses.pio` Assembly code (PIOASM) required a steep learning curve.
+- **Lesson Learned**: Attempting to implement hardware-level features quickly without a deep conceptual understanding can lead to complex debugging cycles. In future iterations, more time would be allocated to the fundamental study of the RP2040 hardware manual before implementation to streamline the development process.
 
 ---
 
@@ -131,13 +135,14 @@ To capture the rapidly decaying NMR signal without gaps, DMA channels transfer s
 ### Firmware Deployment
 1. Open `main.ino` in the Arduino IDE.
 2. Select **Raspberry Pi Pico** (or RP2040 Board).
-3. Connect the Pico and click **Upload**.
+3. Connect the Pico and click **Upload** (this flashes the firmware to the Pico)
 
-### Desktop App Setup
+### Desktop GUI Setup
+Once the firmware is flashed to the Pico, the GUI can be used to control the NMR Spectrometer.
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/nmr-controller.git
-cd nmr-controller
+git clone https://github.com/sahmed0/spectrometer-cpp-firmware.git
+cd spectrometer-cpp-firmware
 
 # Install dependencies
 pip install customtkinter pyserial numpy scipy matplotlib
