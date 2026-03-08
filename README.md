@@ -4,9 +4,13 @@ A high-precision, low-cost controller for Earth's Field Nuclear Magnetic Resonan
 
 This project demonstrates a full-stack engineering approach, combining bare-metal firmware, custom hardware interfaces (PIO/DMA), and a modern desktop application for scientific data analysis.
 
+![Copyright](https://img.shields.io/badge/Copyright-2026_Sajid_Ahmed-limegreen.svg)
+![Firmware](https://img.shields.io/badge/Firmware-C++-blue.svg)
+![Desktop GUI](https://img.shields.io/badge/Desktop_GUI-Python-yellow.svg)
+
 ---
 
-## 🏛️ Technical Architecture
+## Technical Architecture
 
 This system allows for sub-microsecond timing precision and gapless data acquisition, overcoming the traditional limitations of standard microcontrollers.
 
@@ -30,7 +34,7 @@ The RP2040's unique PIO subsystem is used to implement a custom assembly state m
 
 ---
 
-## 📊 Data Analysis Features
+## Data Analysis Features
 
 The software provides real-time signal processing to extract physical properties from the raw NMR data.
 
@@ -46,7 +50,7 @@ To determine the exact Larmor frequency of the sample (typically ~2 kHz in Earth
 
 ---
 
-## 📸 System Gallery
+## System Gallery
 
 ### 1. Free Induction Decay (FID)
 *Raw signal from the probe showing the decaying Larmor precession.*
@@ -70,19 +74,15 @@ To determine the exact Larmor frequency of the sample (typically ~2 kHz in Earth
 
 ---
 
-## Licence & Usage
+## Licensing & Usage
 
 Copyright (c) 2026 Sajid Ahmed. **All Rights Reserved.**
 
-This repository is strictly for **portfolio review and recruitment purposes**.
+This repository is a **Proprietary Portfolio Project**.
 
-### Use Constraints:
-* **No Unauthorised Distribution:** You may not redistribute, sublicense, or sell any part of this source code.
-* **No Commercial Use:** This software may not be used for any commercial or production purposes.
-* **AI & Machine Learning Restriction:** Use of this source code, in whole or in part, for the purpose of training, fine-tuning, or validating machine learning or artificial intelligence models (including but not limited to LLMs and generative AI) is **strictly prohibited** without express written permission from the author.
-* **Viewing & Forking:** Permission is granted to view the source code and fork the repository on GitHub for the purpose of personal review only.
+While I am a strong supporter of Open Source Software, this specific codebase represents a significant personal investment of time and effort and is therefore provided for **recruitment evaluation only**.
 
-The software is provided **" as is "**, without warranty of any kind.
+* **Permitted:** Viewing, forking (within GitHub only), and local execution for review.
+* **Prohibited:** Modification, redistribution, commercial use, and AI/LLM training.
 
-*See the [LICENSE](LICENSE) file for the full legal text.*
-
+For the full legal terms, please see the [LICENSE](./LICENSE) file.
